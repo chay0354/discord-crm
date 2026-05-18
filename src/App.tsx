@@ -102,6 +102,7 @@ export default function App() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lbLoading, setLbLoading] = useState(false);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -180,7 +181,8 @@ export default function App() {
 
   const runAction = async (action: (typeof ACTIONS)[number]) => {
     if (!confirm(`${action.hint}\n\nRun "${action.label}" on the live Discord?`)) return;
-    setRefreshing(true);
+    setPendingActionId(action.id);
+    setError("");
     try {
       const res = await api.action(action.id);
       showToast(res.message);
@@ -188,7 +190,7 @@ export default function App() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed");
     } finally {
-      setRefreshing(false);
+      setPendingActionId(null);
     }
   };
 
@@ -270,17 +272,28 @@ export default function App() {
               </p>
             </div>
             <div className="actions-grid">
-              {ACTIONS.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  className="btn btn-sm btn-accent"
-                  disabled={initialLoading || refreshing}
-                  onClick={() => void runAction(a)}
-                >
-                  {a.label}
-                </button>
-              ))}
+              {ACTIONS.map((a) => {
+                const actionLoading = pendingActionId === a.id;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    className={`btn btn-sm btn-accent${actionLoading ? " btn-loading" : ""}`}
+                    disabled={initialLoading || pendingActionId !== null}
+                    aria-busy={actionLoading}
+                    onClick={() => void runAction(a)}
+                  >
+                    {actionLoading ? (
+                      <span className="btn-inline-loading">
+                        <span className="btn-spinner" aria-hidden="true" />
+                        Running…
+                      </span>
+                    ) : (
+                      a.label
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

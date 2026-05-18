@@ -168,6 +168,27 @@ body {
   font-size: 0.78rem;
 }
 
+.btn-loading {
+  min-width: 7.5rem;
+}
+
+.btn-inline-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
