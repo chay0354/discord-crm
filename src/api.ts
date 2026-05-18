@@ -1,13 +1,18 @@
 const apiBaseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const adminKey = (import.meta.env.VITE_ADMIN_API_KEY || "").trim();
 const REQUEST_TIMEOUT_MS = 25_000;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((init?.headers as Record<string, string>) || {}),
+  };
+  if (adminKey) {
+    headers["X-Admin-Key"] = adminKey;
+  }
   const res = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...((init?.headers as Record<string, string>) || {}),
-    },
+    headers,
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) {
