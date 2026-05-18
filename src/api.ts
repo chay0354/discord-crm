@@ -1,5 +1,6 @@
 const apiBaseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 const adminKey = (import.meta.env.VITE_ADMIN_API_KEY || "").trim();
+const REQUEST_TIMEOUT_MS = 25_000;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: HeadersInit = {
@@ -9,7 +10,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (adminKey) {
     (headers as Record<string, string>)["X-Admin-Key"] = adminKey;
   }
-  const res = await fetch(`${apiBaseUrl}${path}`, { ...init, headers });
+  const res = await fetch(`${apiBaseUrl}${path}`, {
+    ...init,
+    headers,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const detail = (body as { detail?: string }).detail || res.statusText;
@@ -29,6 +34,20 @@ export type GameStatus = {
   category_titles: Record<string, string>;
   latest_winners: { week_key: string; winner_ids: number[] } | null;
   bot_connected: boolean;
+};
+
+export type WinningStock = { ticker: string; votes: number; tied: boolean };
+export type VoteTotalRow = { ticker: string; votes: number };
+export type GameWinner = { user_id: number; username: string };
+
+export type GameHistoryEntry = {
+  week_key: string;
+  closed_at: string | null;
+  winner_ids: number[];
+  winners: GameWinner[];
+  category_titles: Record<string, string>;
+  winning_stocks: Record<string, WinningStock[]>;
+  vote_totals: Record<string, VoteTotalRow[]>;
 };
 
 export const api = {
@@ -51,6 +70,7 @@ export const api = {
       >;
       category_titles: Record<string, string>;
     }>("/api/game/leaderboards"),
+  gameHistory: (limit = 20) => request<GameHistoryEntry[]>(`/api/game/history?limit=${limit}`),
   audit: (limit = 50) => request<Record<string, unknown>[]>(`/api/game/audit?limit=${limit}`),
   subscriptions: (limit = 100) =>
     request<Record<string, unknown>[]>(`/api/subscriptions?limit=${limit}`),
