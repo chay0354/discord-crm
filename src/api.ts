@@ -3,12 +3,12 @@ const adminKey = (import.meta.env.VITE_ADMIN_API_KEY || "").trim();
 const REQUEST_TIMEOUT_MS = 25_000;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(init?.headers || {}),
+    ...((init?.headers as Record<string, string>) || {}),
   };
   if (adminKey) {
-    (headers as Record<string, string>)["X-Admin-Key"] = adminKey;
+    headers["X-Admin-Key"] = adminKey;
   }
   const res = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
@@ -82,5 +82,5 @@ export const api = {
 };
 
 export function isApiConfigured(): boolean {
-  return Boolean(adminKey);
+  return Boolean(apiBaseUrl);
 }

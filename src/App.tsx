@@ -124,7 +124,7 @@ export default function App() {
 
   const refresh = useCallback(async (opts?: { silent?: boolean }) => {
     if (!isApiConfigured()) {
-      setError("Add VITE_ADMIN_API_KEY to crm/.env.local");
+      setError("Set VITE_API_URL to your Railway API URL (e.g. in Vercel env).");
       setInitialLoading(false);
       return;
     }
